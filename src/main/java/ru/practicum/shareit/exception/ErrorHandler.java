@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import jakarta.validation.ConstraintViolationException;  // Изменил здесь
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class ErrorHandler {
@@ -33,17 +33,5 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleInternalError(Exception e) {
         return new ErrorResponse("Internal server error");
-    }
-}
-
-class ErrorResponse {
-    private final String error;
-
-    public ErrorResponse(String error) {
-        this.error = error;
-    }
-
-    public String getError() {
-        return error;
     }
 }
