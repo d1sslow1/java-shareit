@@ -2,10 +2,15 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.ItemAccessDeniedException;
+import ru.practicum.shareit.exception.ItemNotFoundException;
+import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.UserRepository;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,9 +19,13 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final ItemMapper itemMapper;
+    private final UserRepository userRepository;
 
     @Override
     public ItemDto create(ItemDto itemDto, Long ownerId) {
+        userRepository.findById(ownerId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         Item item = itemMapper.toEntity(itemDto, ownerId);
         Item savedItem = itemRepository.save(item);
         return itemMapper.toDto(savedItem);
@@ -25,7 +34,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getById(Long id) {
         Item item = itemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new ItemNotFoundException("Item not found"));
         return itemMapper.toDto(item);
     }
 
@@ -39,10 +48,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto update(Long id, ItemDto itemDto, Long ownerId) {
         Item existingItem = itemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new ItemNotFoundException("Item not found"));
 
         if (!ownerId.equals(existingItem.getOwnerId())) {
-            throw new RuntimeException("Only owner can update item");
+            throw new ItemAccessDeniedException("Only owner can update item");
         }
 
         if (itemDto.getName() != null) {
