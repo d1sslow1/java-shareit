@@ -1,16 +1,18 @@
 package ru.practicum.shareit.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemRequest {
-    private Long id;
-    private String description;
-    private Long requesterId;
-    private LocalDateTime created;
+    Long id;
+    String description;
+    Long requesterId;
+    LocalDateTime created;
 }

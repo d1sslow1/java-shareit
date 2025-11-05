@@ -1,26 +1,27 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemDto {
-    private Long id;
+    Long id;
 
     @NotBlank(message = "Name cannot be blank")
-    private String name;
+    String name;
 
     @NotBlank(message = "Description cannot be blank")
-    private String description;
+    String description;
 
     @NotNull(message = "Available status cannot be null")
-    private Boolean available;
+    Boolean available;
 
-    private Long requestId;
+    Long requestId;
 }
