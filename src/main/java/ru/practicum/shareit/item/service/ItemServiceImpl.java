@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
+import ru.practicum.shareit.exception.CommentValidationException;
+import ru.practicum.shareit.exception.ItemAccessDeniedException;
 import ru.practicum.shareit.exception.ItemNotFoundException;
 import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.item.dto.CommentDto;
@@ -55,11 +57,9 @@ public class ItemServiceImpl implements ItemService {
 
         ItemWithBookingsDto itemWithBookings = itemMapper.toItemWithBookingsDto(item);
 
-
         if (item.getOwnerId().equals(userId)) {
             addBookingInfo(itemWithBookings, item.getId());
         }
-
 
         addCommentsInfo(itemWithBookings, item.getId());
 
@@ -71,7 +71,6 @@ public class ItemServiceImpl implements ItemService {
         List<Item> items = itemRepository.findByOwnerIdOrderById(ownerId);
         List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
 
-        // Получаем все комментарии для всех items одним запросом
         Map<Long, List<Comment>> commentsByItemId = commentRepository.findByItemIdInOrderByCreatedDesc(itemIds)
                 .stream()
                 .collect(Collectors.groupingBy(comment -> comment.getItem().getId()));
@@ -81,7 +80,6 @@ public class ItemServiceImpl implements ItemService {
                     ItemWithBookingsDto itemWithBookings = itemMapper.toItemWithBookingsDto(item);
                     addBookingInfo(itemWithBookings, item.getId());
 
-                    // Добавляем комментарии из подготовленной мапы
                     List<Comment> comments = commentsByItemId.getOrDefault(item.getId(), Collections.emptyList());
                     List<CommentDto> commentDtos = comments.stream()
                             .map(commentMapper::toDto)
@@ -100,13 +98,19 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new ItemNotFoundException("Item not found"));
 
         if (!ownerId.equals(existingItem.getOwnerId())) {
-            throw new RuntimeException("Only owner can update item");
+            throw new ItemAccessDeniedException("Only owner can update item");
         }
 
         if (itemDto.getName() != null) {
+            if (itemDto.getName().isBlank()) {
+                throw new RuntimeException("Name cannot be blank");
+            }
             existingItem.setName(itemDto.getName());
         }
         if (itemDto.getDescription() != null) {
+            if (itemDto.getDescription().isBlank()) {
+                throw new RuntimeException("Description cannot be blank");
+            }
             existingItem.setDescription(itemDto.getDescription());
         }
         if (itemDto.getAvailable() != null) {
@@ -136,7 +140,6 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException("Item not found"));
 
-        // Проверяем, что пользователь действительно брал вещь в аренду
         List<Booking> userBookings = bookingRepository.findByBookerIdOrderByStartDesc(authorId);
         boolean hasBooked = userBookings.stream()
                 .filter(booking -> booking.getItem().getId().equals(itemId))
@@ -144,7 +147,7 @@ public class ItemServiceImpl implements ItemService {
                 .anyMatch(booking -> booking.getEnd().isBefore(LocalDateTime.now()));
 
         if (!hasBooked) {
-            throw new RuntimeException("You can only comment on items you have booked in the past");
+            throw new CommentValidationException("You can only comment on items you have booked in the past");
         }
 
         Comment comment = new Comment();
@@ -160,7 +163,6 @@ public class ItemServiceImpl implements ItemService {
     private void addBookingInfo(ItemWithBookingsDto itemWithBookings, Long itemId) {
         LocalDateTime now = LocalDateTime.now();
 
-
         List<Booking> pastBookings = bookingRepository.findByItemIdAndEndBeforeOrderByStartDesc(itemId, now);
         if (!pastBookings.isEmpty()) {
             Booking lastBooking = pastBookings.get(0);
@@ -171,7 +173,6 @@ public class ItemServiceImpl implements ItemService {
                     lastBooking.getEnd()
             ));
         }
-
 
         List<Booking> futureBookings = bookingRepository.findByItemIdAndStartAfterOrderByStartDesc(itemId, now);
         if (!futureBookings.isEmpty()) {
