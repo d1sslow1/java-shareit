@@ -2,7 +2,6 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.EmailConflictException;
 import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -12,18 +11,13 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
-    private final UserRepository userRepository; // Используем JPA репозиторий
+    private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     @Override
-    @Transactional
     public UserDto create(UserDto userDto) {
-
-        if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-            throw new EmailConflictException("Email already exists");
-        }
+        checkEmailUniqueness(userDto.getEmail());
 
         User user = userMapper.toEntity(userDto);
         User savedUser = userRepository.save(user);
@@ -45,30 +39,36 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public UserDto update(Long id, UserDto userDto) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (userDto.getEmail() != null && !userDto.getEmail().equals(existingUser.getEmail())) {
-            // Проверка уникальности нового email
-            if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
-                throw new EmailConflictException("Email already exists");
-            }
-            existingUser.setEmail(userDto.getEmail());
+            checkEmailUniqueness(userDto.getEmail());
         }
 
         if (userDto.getName() != null) {
             existingUser.setName(userDto.getName());
         }
+        if (userDto.getEmail() != null) {
+            existingUser.setEmail(userDto.getEmail());
+        }
 
-        User updatedUser = userRepository.save(existingUser);
+        User updatedUser = userRepository.update(existingUser);
         return userMapper.toDto(updatedUser);
     }
 
     @Override
-    @Transactional
     public void delete(Long id) {
         userRepository.deleteById(id);
+    }
+
+    private void checkEmailUniqueness(String email) {
+        userRepository.findAll().stream()
+                .filter(user -> email.equals(user.getEmail()))
+                .findFirst()
+                .ifPresent(user -> {
+                    throw new EmailConflictException("Email already exists");
+                });
     }
 }
