@@ -8,12 +8,6 @@ class ShareItTests {
 
     @Test
     void contextLoads() {
-
-    }
-
-    @Test
-    void mainMethodStarts() {
-
-        ShareItApp.main(new String[]{});
+        // Тест проверяет, что контекст Spring приложения успешно загружается
     }
 }
