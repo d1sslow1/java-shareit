@@ -1,9 +1,9 @@
-package ru.practicum.shareit.item.dto;
+package ru.practicum.shareit.user.dto;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -11,17 +11,13 @@ import jakarta.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ItemDto {
+public class UserDto {
     Long id;
 
     @NotBlank(message = "Name cannot be blank")
     String name;
 
-    @NotBlank(message = "Description cannot be blank")
-    String description;
-
-    @NotNull(message = "Available status cannot be null")
-    Boolean available;
-
-    Long requestId;
+    @NotBlank(message = "Email cannot be blank")
+    @Email(message = "Email should be valid")
+    String email;
 }
