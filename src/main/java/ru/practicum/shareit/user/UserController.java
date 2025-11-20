@@ -14,13 +14,15 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
+    private static final String USER_ID_PATH = "/{id}";
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto create(@Valid @RequestBody UserDto userDto) {
         return userService.create(userDto);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(USER_ID_PATH)
     public UserDto getById(@PathVariable Long id) {
         return userService.getById(id);
     }
@@ -30,15 +32,14 @@ public class UserController {
         return userService.getAll();
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping(USER_ID_PATH)
     public UserDto update(@PathVariable Long id, @RequestBody UserDto userDto) {
         return userService.update(id, userDto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(USER_ID_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         userService.delete(id);
     }
-
 }
