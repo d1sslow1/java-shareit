@@ -8,6 +8,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.item.service.ItemService;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -16,28 +17,32 @@ import java.util.List;
 public class ItemController {
     private final ItemService itemService;
 
+    private static final String USER_ID_HEADER = "X-Sharer-User-Id";
+    private static final String ITEM_ID_PATH = "/{itemId}";
+    private static final String COMMENT_PATH = "/comment";
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemDto create(@RequestBody ItemDto itemDto,
-                          @RequestHeader("X-Sharer-User-Id") Long ownerId) {
+    public ItemDto create(@Valid @RequestBody ItemDto itemDto,
+                          @RequestHeader(USER_ID_HEADER) Long ownerId) {
         return itemService.create(itemDto, ownerId);
     }
 
-    @GetMapping("/{itemId}")
+    @GetMapping(ITEM_ID_PATH)
     public ItemWithBookingsDto getById(@PathVariable Long itemId,
-                                       @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                       @RequestHeader(USER_ID_HEADER) Long userId) {
         return itemService.getByIdWithBookings(itemId, userId);
     }
 
     @GetMapping
-    public List<ItemWithBookingsDto> getAllByOwnerId(@RequestHeader("X-Sharer-User-Id") Long ownerId) {
+    public List<ItemWithBookingsDto> getAllByOwnerId(@RequestHeader(USER_ID_HEADER) Long ownerId) {
         return itemService.getAllByOwnerIdWithBookings(ownerId);
     }
 
-    @PatchMapping("/{itemId}")
+    @PatchMapping(ITEM_ID_PATH)
     public ItemDto update(@PathVariable Long itemId,
                           @RequestBody ItemDto itemDto,
-                          @RequestHeader("X-Sharer-User-Id") Long ownerId) {
+                          @RequestHeader(USER_ID_HEADER) Long ownerId) {
         return itemService.update(itemId, itemDto, ownerId);
     }
 
@@ -46,10 +51,10 @@ public class ItemController {
         return itemService.search(text);
     }
 
-    @PostMapping("/{itemId}/comment")
+    @PostMapping(ITEM_ID_PATH + COMMENT_PATH)
     public CommentDto addComment(@PathVariable Long itemId,
                                  @RequestBody CommentDto commentDto,
-                                 @RequestHeader("X-Sharer-User-Id") Long authorId) {
+                                 @RequestHeader(USER_ID_HEADER) Long authorId) {
         return itemService.addComment(itemId, commentDto, authorId);
     }
 }

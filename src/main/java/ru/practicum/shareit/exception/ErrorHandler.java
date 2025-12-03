@@ -36,7 +36,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler(ItemAccessDeniedException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleItemAccessDenied(ItemAccessDeniedException e) {
         return new ErrorResponse(e.getMessage());
     }
@@ -44,6 +44,30 @@ public class ErrorHandler {
     @ExceptionHandler(CommentValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleCommentValidation(CommentValidationException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(ItemNotAvailableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleItemNotAvailable(ItemNotAvailableException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidStatusException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidStatus(InvalidStatusException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(OwnItemBookingException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleOwnItemBooking(OwnItemBookingException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleAccessDenied(AccessDeniedException e) {
         return new ErrorResponse(e.getMessage());
     }
 
@@ -59,10 +83,16 @@ public class ErrorHandler {
         return new ErrorResponse("Constraint violation");
     }
 
-    @ExceptionHandler(RuntimeException.class)
+    @ExceptionHandler(NumberFormatException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleNumberFormatException(NumberFormatException e) {
+        return new ErrorResponse("Invalid ID format");
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleRuntimeException(RuntimeException e) {
-        return new ErrorResponse(e.getMessage());
+        return new ErrorResponse("Internal server error");
     }
 
     @ExceptionHandler(Exception.class)

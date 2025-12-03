@@ -3,10 +3,9 @@ package ru.practicum.shareit.booking;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
-import ru.practicum.shareit.exception.ItemNotFoundException;
-import ru.practicum.shareit.exception.UserNotFoundException;
+import ru.practicum.shareit.booking.dto.BookingResponseDto;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.User;
@@ -27,84 +26,89 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public BookingDto create(BookingRequestDto bookingRequestDto, Long bookerId) {
+    public BookingResponseDto create(BookingRequestDto bookingRequestDto, Long bookerId) {
         User booker = userRepository.findById(bookerId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Item item = itemRepository.findById(bookingRequestDto.getItemId())
                 .orElseThrow(() -> new ItemNotFoundException("Item not found"));
 
-
-        if (!item.getAvailable()) {
-            throw new RuntimeException("Item is not available");
+        if (bookingRequestDto.getStart() == null || bookingRequestDto.getEnd() == null) {
+            throw new InvalidStatusException("Start and end dates are required");
         }
 
+        if (bookingRequestDto.getStart().isAfter(bookingRequestDto.getEnd()) ||
+                bookingRequestDto.getStart().equals(bookingRequestDto.getEnd()) ||
+                bookingRequestDto.getStart().isBefore(LocalDateTime.now())) {
+            throw new InvalidStatusException("Invalid booking dates");
+        }
+
+        if (!item.getAvailable()) {
+            throw new ItemNotAvailableException("Item is not available");
+        }
 
         if (item.getOwnerId().equals(bookerId)) {
-            throw new RuntimeException("You cannot book your own item");
+            throw new OwnItemBookingException("You cannot book your own item");
         }
 
         Booking booking = bookingMapper.toEntity(bookingRequestDto, item, booker);
         booking.setStatus(BookingStatus.WAITING);
 
         Booking savedBooking = bookingRepository.save(booking);
-        return bookingMapper.toDto(savedBooking);
+        return bookingMapper.toResponseDto(savedBooking);
     }
 
     @Override
     @Transactional
-    public BookingDto updateStatus(Long bookingId, Boolean approved, Long ownerId) {
+    public BookingResponseDto updateStatus(Long bookingId, Boolean approved, Long ownerId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
-
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found"));
 
         if (!booking.getItem().getOwnerId().equals(ownerId)) {
-            throw new RuntimeException("Only item owner can approve booking");
+            throw new ItemAccessDeniedException("Only item owner can approve booking");
         }
 
-
         if (booking.getStatus() != BookingStatus.WAITING) {
-            throw new RuntimeException("Booking already processed");
+            throw new InvalidStatusException("Booking already processed");
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
         Booking updatedBooking = bookingRepository.save(booking);
-        return bookingMapper.toDto(updatedBooking);
+        return bookingMapper.toResponseDto(updatedBooking);
     }
 
     @Override
-    public BookingDto getById(Long bookingId, Long userId) {
+    public BookingResponseDto getById(Long bookingId, Long userId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
-
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found"));
 
         if (!booking.getBooker().getId().equals(userId) &&
                 !booking.getItem().getOwnerId().equals(userId)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
-        return bookingMapper.toDto(booking);
+        return bookingMapper.toResponseDto(booking);
     }
 
     @Override
-    public List<BookingDto> getUserBookings(Long userId, String state) {
+    public List<BookingResponseDto> getUserBookings(Long userId, String state) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         List<Booking> bookings = bookingRepository.findByBookerIdOrderByStartDesc(userId);
         return filterBookingsByState(bookings, state).stream()
-                .map(bookingMapper::toDto)
+                .map(bookingMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<BookingDto> getOwnerBookings(Long ownerId, String state) {
+    public List<BookingResponseDto> getOwnerBookings(Long ownerId, String state) {
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         List<Booking> bookings = bookingRepository.findByItemOwnerIdOrderByStartDesc(ownerId);
         return filterBookingsByState(bookings, state).stream()
-                .map(bookingMapper::toDto)
+                .map(bookingMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
