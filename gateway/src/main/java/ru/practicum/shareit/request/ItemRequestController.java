@@ -20,6 +20,10 @@ public class ItemRequestController {
     private final ItemRequestClient itemRequestClient;
 
     private static final String USER_ID_HEADER = "X-Sharer-User-Id";
+    private static final String REQUEST_ID_PATH = "/{requestId}";
+    private static final String ALL_PATH = "/all";
+    private static final String FROM_PARAM = "from";
+    private static final String SIZE_PARAM = "size";
 
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody ItemRequestDto itemRequestDto,
@@ -32,14 +36,14 @@ public class ItemRequestController {
         return itemRequestClient.getUserRequests(userId);
     }
 
-    @GetMapping("/all")
+    @GetMapping(ALL_PATH)
     public ResponseEntity<Object> getAllRequests(@RequestHeader(USER_ID_HEADER) Long userId,
                                                  @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
                                                  @Positive @RequestParam(defaultValue = "10") Integer size) {
         return itemRequestClient.getAllRequests(userId, from, size);
     }
 
-    @GetMapping("/{requestId}")
+    @GetMapping(REQUEST_ID_PATH)
     public ResponseEntity<Object> getRequestById(@PathVariable Long requestId,
                                                  @RequestHeader(USER_ID_HEADER) Long userId) {
         return itemRequestClient.getRequestById(requestId, userId);

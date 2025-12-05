@@ -1,6 +1,7 @@
 package ru.practicum.shareit.request.dto;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,26 +11,28 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemRequestDto {
-    private Long id;
+    Long id;
 
     @NotBlank(message = "Description cannot be blank")
-    private String description;
+    String description;
 
-    private LocalDateTime created;
-    private List<ItemDto> items;
+    LocalDateTime created;
+    List<ItemDto> items;
 
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class ItemDto {
-        private Long id;
-        private String name;
-        private String description;
-        private Boolean available;
-        private Long requestId;
-        private Long ownerId;
+        Long id;
+        String name;
+        String description;
+        Boolean available;
+        Long requestId;
+        Long ownerId;
     }
 }

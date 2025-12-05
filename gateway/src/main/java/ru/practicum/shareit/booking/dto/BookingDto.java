@@ -16,5 +16,5 @@ public class BookingDto {
     LocalDateTime end;
     Long itemId;
     Long bookerId;
-    String status;  // Изменить с BookingStatus на String
+    String status;
 }

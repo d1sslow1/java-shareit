@@ -19,6 +19,8 @@ public class ItemController {
     private final ItemClient itemClient;
 
     private static final String USER_ID_HEADER = "X-Sharer-User-Id";
+    private static final String ITEM_ID_PATH = "/{itemId}";
+    private static final String COMMENT_PATH = "/comment";
 
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody ItemDto itemDto,
@@ -26,7 +28,7 @@ public class ItemController {
         return itemClient.create(itemDto, ownerId);
     }
 
-    @GetMapping("/{itemId}")
+    @GetMapping(ITEM_ID_PATH)
     public ResponseEntity<Object> getById(@PathVariable Long itemId,
                                           @RequestHeader(USER_ID_HEADER) Long userId) {
         return itemClient.getById(itemId, userId);
@@ -37,7 +39,7 @@ public class ItemController {
         return itemClient.getAllByOwnerId(ownerId);
     }
 
-    @PatchMapping("/{itemId}")
+    @PatchMapping(ITEM_ID_PATH)
     public ResponseEntity<Object> update(@PathVariable Long itemId,
                                          @RequestBody ItemDto itemDto,
                                          @RequestHeader(USER_ID_HEADER) Long ownerId) {
@@ -49,7 +51,7 @@ public class ItemController {
         return itemClient.search(text);
     }
 
-    @PostMapping("/{itemId}/comment")
+    @PostMapping(ITEM_ID_PATH + COMMENT_PATH)
     public ResponseEntity<Object> addComment(@PathVariable Long itemId,
                                              @RequestBody CommentDto commentDto,
                                              @RequestHeader(USER_ID_HEADER) Long authorId) {

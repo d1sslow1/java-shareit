@@ -17,12 +17,14 @@ import jakarta.validation.Valid;
 public class UserController {
     private final UserClient userClient;
 
+    private static final String USER_ID_PATH = "/{id}";
+
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody UserDto userDto) {
         return userClient.create(userDto);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(USER_ID_PATH)
     public ResponseEntity<Object> getById(@PathVariable Long id) {
         return userClient.getById(id);
     }
@@ -32,12 +34,12 @@ public class UserController {
         return userClient.getAll();
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping(USER_ID_PATH)
     public ResponseEntity<Object> update(@PathVariable Long id, @RequestBody UserDto userDto) {
         return userClient.update(id, userDto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(USER_ID_PATH)
     public ResponseEntity<Object> delete(@PathVariable Long id) {
         return userClient.delete(id);
     }

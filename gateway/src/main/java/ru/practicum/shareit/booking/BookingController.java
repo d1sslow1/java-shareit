@@ -18,6 +18,8 @@ public class BookingController {
     private final BookingClient bookingClient;
 
     private static final String USER_ID_HEADER = "X-Sharer-User-Id";
+    private static final String BOOKING_ID_PATH = "/{bookingId}";
+    private static final String STATE_PARAM = "state";
 
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody BookingRequestDto bookingRequestDto,
@@ -25,14 +27,14 @@ public class BookingController {
         return bookingClient.create(bookingRequestDto, userId);
     }
 
-    @PatchMapping("/{bookingId}")
+    @PatchMapping(BOOKING_ID_PATH)
     public ResponseEntity<Object> updateStatus(@PathVariable Long bookingId,
                                                @RequestParam Boolean approved,
                                                @RequestHeader(USER_ID_HEADER) Long userId) {
         return bookingClient.updateStatus(bookingId, approved, userId);
     }
 
-    @GetMapping("/{bookingId}")
+    @GetMapping(BOOKING_ID_PATH)
     public ResponseEntity<Object> getById(@PathVariable Long bookingId,
                                           @RequestHeader(USER_ID_HEADER) Long userId) {
         return bookingClient.getById(bookingId, userId);
