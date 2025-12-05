@@ -36,20 +36,18 @@ class ItemServiceImplTest {
 
     @Test
     void create_whenUserNotFound_shouldThrowException() {
-        // given
+
         Item item = new Item(null, "item", "desc", true, null, null);
         Long ownerId = 1L;
 
         when(userRepository.findById(ownerId)).thenReturn(Optional.empty());
 
-        // when & then
         assertThrows(UserNotFoundException.class, () -> itemService.create(item, ownerId));
         verify(itemRepository, never()).save(any());
     }
 
     @Test
     void create_whenUserExists_shouldSaveItem() {
-        // given
         Item item = new Item(null, "item", "desc", true, null, null);
         Item itemWithOwner = new Item(null, "item", "desc", true, 1L, null);
         Item savedItem = new Item(1L, "item", "desc", true, 1L, null);
