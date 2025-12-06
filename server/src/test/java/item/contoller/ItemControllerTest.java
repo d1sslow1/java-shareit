@@ -1,14 +1,16 @@
 package item.contoller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.practicum.shareit.item.controller.ItemController;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.item.mapper.ItemMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -26,14 +28,13 @@ class ItemControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private ru.practicum.shareit.item.service.ItemService itemService;
+    private ItemService itemService;
 
     @MockBean
-    private ru.practicum.shareit.item.mapper.ItemMapper itemMapper;
+    private ItemMapper itemMapper;
 
     @Test
     void createItem_shouldReturnCreated() throws Exception {
-
         ItemDto itemDto = new ItemDto();
         itemDto.setName("Item");
         itemDto.setDescription("Description");

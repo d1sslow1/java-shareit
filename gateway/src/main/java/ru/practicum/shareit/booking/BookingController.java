@@ -19,7 +19,6 @@ public class BookingController {
 
     private static final String USER_ID_HEADER = "X-Sharer-User-Id";
     private static final String BOOKING_ID_PATH = "/{bookingId}";
-    private static final String STATE_PARAM = "state";
 
     @PostMapping
     public ResponseEntity<Object> create(@Valid @RequestBody BookingRequestDto bookingRequestDto,

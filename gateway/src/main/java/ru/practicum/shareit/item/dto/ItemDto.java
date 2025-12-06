@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item.dto;
 
 import lombok.*;
-import lombok.experimental.FieldDefaults;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -10,7 +9,6 @@ import jakarta.validation.constraints.NotNull;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemDto {
     Long id;
 

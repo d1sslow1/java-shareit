@@ -18,7 +18,6 @@ class BookingRequestDtoJsonTest {
 
     @Test
     void shouldSerializeAndDeserialize() throws Exception {
-
         LocalDateTime start = LocalDateTime.of(2024, 1, 1, 10, 0);
         LocalDateTime end = LocalDateTime.of(2024, 1, 1, 12, 0);
         BookingRequestDto dto = new BookingRequestDto(1L, start, end);

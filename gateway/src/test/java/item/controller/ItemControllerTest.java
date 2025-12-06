@@ -31,7 +31,6 @@ class ItemControllerTest {
 
     @Test
     void create_whenValidItem_shouldReturnOk() throws Exception {
-
         ItemDto itemDto = new ItemDto(null, "Item 1", "Description 1", true, null, null);
         Long ownerId = 1L;
 
@@ -47,8 +46,7 @@ class ItemControllerTest {
 
     @Test
     void create_whenNameBlank_shouldReturnBadRequest() throws Exception {
-
-        ItemDto itemDto = new ItemDto(null, "Item 1", "Description 1", true, null, null);
+        ItemDto itemDto = new ItemDto(null, "", "Description 1", true, null, null);
 
         mockMvc.perform(post("/items")
                         .header("X-Sharer-User-Id", 1L)

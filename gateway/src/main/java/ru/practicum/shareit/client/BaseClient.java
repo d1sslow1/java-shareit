@@ -1,6 +1,6 @@
 package ru.practicum.shareit.client;
 
-import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -9,9 +9,9 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 public class BaseClient {
     protected final RestTemplate rest;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public BaseClient(RestTemplate rest) {
         this.rest = rest;
@@ -49,10 +49,6 @@ public class BaseClient {
         return makeAndSendRequest(HttpMethod.PATCH, path, userId, parameters, null);
     }
 
-    protected ResponseEntity<Object> patch(String path, Long userId, @Nullable Map<String, Object> parameters, @Nullable Object body) {
-        return makeAndSendRequest(HttpMethod.PATCH, path, userId, parameters, body);
-    }
-
     protected ResponseEntity<Object> put(String path, Long userId, Object body) {
         return makeAndSendRequest(HttpMethod.PUT, path, userId, null, body);
     }
@@ -64,48 +60,67 @@ public class BaseClient {
     private ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path, Long userId,
                                                       @Nullable Map<String, Object> parameters,
                                                       @Nullable Object body) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        if (userId != null) {
-            headers.set("X-Sharer-User-Id", String.valueOf(userId));
-        }
-
-        HttpEntity<Object> requestEntity = new HttpEntity<>(body, headers);
-
-        String fullUrl = "";
         try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
-            if (parameters != null && !parameters.isEmpty()) {
-                log.debug("Making {} request to {} with parameters: {}", method, path, parameters);
-                ResponseEntity<Object> response = rest.exchange(path, method, requestEntity, Object.class, parameters);
-                log.debug("Response received: {}", response.getStatusCode());
-                return response;
-            } else {
-                log.debug("Making {} request to {}", method, path);
-                ResponseEntity<Object> response = rest.exchange(path, method, requestEntity, Object.class);
-                log.debug("Response received: {}", response.getStatusCode());
-                return response;
+            if (userId != null) {
+                headers.set("X-Sharer-User-Id", String.valueOf(userId));
             }
-        } catch (HttpStatusCodeException e) {
-            log.error("Error {} from server: {} - {}", e.getStatusCode(), path, e.getResponseBodyAsString());
+
+            HttpEntity<Object> requestEntity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<String> response;
+            if (parameters != null && !parameters.isEmpty()) {
+                response = rest.exchange(path, method, requestEntity, String.class, parameters);
+            } else {
+                response = rest.exchange(path, method, requestEntity, String.class);
+            }
+
+            // Парсим JSON ответ
+            Object responseBody = null;
+            if (response.getBody() != null && !response.getBody().isEmpty()) {
+                try {
+                    responseBody = objectMapper.readValue(response.getBody(), Object.class);
+                } catch (Exception e) {
+                    responseBody = response.getBody();
+                }
+            }
+
+            // Возвращаем ResponseEntity с оригинальным статусом
+            HttpHeaders responseHeaders = new HttpHeaders();
+            responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(responseHeaders)
+                    .body(responseBody);
+
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            // ВАЖНО: При ошибке возвращаем оригинальный статус код и тело
+
+            Object errorBody;
+            try {
+                errorBody = objectMapper.readValue(e.getResponseBodyAsString(), Object.class);
+            } catch (Exception ex) {
+                errorBody = e.getResponseBodyAsString();
+            }
 
             HttpHeaders errorHeaders = new HttpHeaders();
             errorHeaders.setContentType(MediaType.APPLICATION_JSON);
 
             return ResponseEntity.status(e.getStatusCode())
                     .headers(errorHeaders)
-                    .body(e.getResponseBodyAsString());
-        } catch (Exception e) {
-            log.error("Unexpected error when calling {}: {}", path, e.getMessage(), e);
+                    .body(errorBody);
 
+        } catch (Exception e) {
+            // Только для неожиданных ошибок возвращаем 500
             HttpHeaders errorHeaders = new HttpHeaders();
             errorHeaders.setContentType(MediaType.APPLICATION_JSON);
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .headers(errorHeaders)
-                    .body("{\"error\":\"Internal server error: " + e.getMessage() + "\"}");
+                    .body(Map.of("error", "Gateway internal error: " + e.getMessage()));
         }
     }
 }
